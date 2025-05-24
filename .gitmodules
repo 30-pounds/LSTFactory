@@ -16,3 +16,6 @@
 [submodule "lib/collateral"]
 	path = lib/collateral
 	url = https://github.com/suzaku-network/collateral
+[submodule "lib/teleporter"]
+	path = lib/teleporter
+	url = https://github.com/ava-labs/teleporter
