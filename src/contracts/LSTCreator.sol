@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IVaultTokenized} from "@suzaku-core/src/interfaces/vault/IVaultTokenized.sol";
-import {IVaultTokenized} from "@suzaku-core/src/interfaces/IVaultFactory.sol";
-import {IVaultTokenized} from "@suzaku-core/src/interfaces/delegator/IL1RestakeDelegator.sol";
-import {IDefaultCollateral} from "@collateral/src/interfaces/defaultCollateral/IDefaultCollateral.sol";
-import {IDefaultCollateralFactory} from "@collateral/src/interfaces/defaultCollateral/IDefaultCollateralFactory.sol";
 
-import {DefaultCollateral} from "@collateral/src/contracts/DefaultCollateral.solCollateral.sol";
-import {L1RestakeDelegator} from "@suzaku-core/src/contracts/delegator/L1RestakeDelegator.sol";
+
+
+import {IVaultTokenized} from "src/interfaces/vault/IVaultTokenized.sol";
+import {IVaultTokenized} from "src/interfaces/vault/IVaultFactory.sol";
+import {IL1RestakeDelegator} from "src/interfaces/delegator/IL1RestakeDelegator.sol";
+import {IDefaultCollateral} from "src/interfaces/IDefaultCollateral.sol";
+import {IDefaultCollateralFactory} from "src/interfaces/IDefaultCollateralFactory.sol";
+
+import {DefaultCollateral} from "src/contracts/DefaultCollateral.sol";
+import {L1RestakeDelegator} from "src/contracts/L1RestakeDelegator.sol";
 
 contract LSTCreator {
     address public immutable token;
