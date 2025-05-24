@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { contracts } from 'config/config_suzaku.sol';
-import {IVaultTokenized} from "src/interfaces/IVaultTokenized.sol";
-import {IDefaultCollateral} from "src/interfaces/IDefaultCollateral.sol";
-import {IDefaultCollateralFactory} from "src/interfaces/IDefaultCollateralFactory.sol";
+import {IVaultTokenized} from "@suzaku-core/src/interfaces/vault/IVaultTokenized.sol";
+import {IVaultTokenized} from "@suzaku-core/src/interfaces/IVaultFactory.sol";
+import {IVaultTokenized} from "@suzaku-core/src/interfaces/delegator/IL1RestakeDelegator.sol";
+import {IDefaultCollateral} from "@collateral/src/interfaces/defaultCollateral/IDefaultCollateral.sol";
+import {IDefaultCollateralFactory} from "@collateral/src/interfaces/defaultCollateral/IDefaultCollateralFactory.sol";
 
-import {DefaultCollateral} from "src/DefaultCollateral.sol";
+import {DefaultCollateral} from "@collateral/src/contracts/DefaultCollateral.solCollateral.sol";
+import {L1RestakeDelegator} from "@suzaku-core/src/contracts/delegator/L1RestakeDelegator.sol";
 
 contract LSTCreator {
     address public immutable token;
@@ -17,7 +19,13 @@ contract LSTCreator {
     address public constant CollateralFactory = 0x6441cA48f9d19E68e8AEb572De5c4836f8329903;
     address public constant VaultFactory = 0xC3b09a650c78daFb79e3C5B782402C8dc523fE88;
     address public constant SLASHER_FACTORY = 0x143e7fe257010A3855DFfacD5dC0BFBAb181b8f4;
-    address public constant DELEGATOR_FACTORY = 0xC11D12ea4A2dcf67509A488585ff5120DccDceaA;
+    address public constant delegatorFactory = 0xC11D12ea4A2dcf67509A488585ff5120DccDceaA;
+    address public constant operatorRegistry = 0x46D45D6be6214F6bd8124187caD1a5302755d7A2;
+    address public constant operatorL1OptInService = 0x0360C1cB32A20D97b358538D9Db71339ce2c9592;
+    address public constant validatorManagerAddress = 0x84F2B4D4cF8DA889701fBe83d127896880c04325;
+    address public constant l1Registry = 0xB9826Bbf0deB10cC3924449B93F418db6b16be36;
+
+    
 
     constructor() {}
 
@@ -37,9 +45,9 @@ contract LSTCreator {
 
 
         // 2. Create the vault associated
-        uint64 lastVersion = VaultFactory.lastVersion();
+        uint64 lastVersion = IVaultFactory(VaultFactory).lastVersion();
         uint48 epochDuration = uint48(bound(epochDuration, 1, 50 weeks));
-        address vaultAddress = VaultFactory.create(
+        address vaultAddress = IVaultFactory(VaultFactory).create(
             lastVersion,
             msg.sender,
             abi.encode(
@@ -65,7 +73,38 @@ contract LSTCreator {
 
         vault = VaultTokenized(vaultAddress);
 
-        return (collateral, vault, lst);
+        // 3. Create the delegator
+        address[] memory l1LimitSetRoleHolders = new address[](1);
+        l1LimitSetRoleHolders[0] = msg.sender;
+        address[] memory operatorL1SharesSetRoleHolders = new address[](1);
+        operatorL1SharesSetRoleHolders[0] = msg.sender;
+
+        address delegatorAddress = delegatorFactory.create(
+            0,
+            abi.encode(
+                address(vault),
+                abi.encode(
+                    IL1RestakeDelegator.InitParams({
+                        baseParams: IBaseDelegator.BaseParams({
+                            defaultAdminRoleHolder: msg.sender,
+                            hook: address(0),
+                            hookSetRoleHolder: msg.sender
+                        }),
+                        l1LimitSetRoleHolders: l1LimitSetRoleHolders,
+                        operatorL1SharesSetRoleHolders: operatorL1SharesSetRoleHolders
+                    })
+                )
+            )
+        );
+
+        delegator = L1RestakeDelegator(delegatorAddress);
+
+        vault.setDelegator(delegatorAddress);
+
+        // 4. Register the L1
+        l1Registry.registerL1{value: 0.01 ether}(_l1, _middleware, "metadataURL");
+
+        return (collateral, vault);
     }
 }
 

@@ -10,3 +10,9 @@
 [submodule "lib/permit2"]
 	path = lib/permit2
 	url = https://github.com/Uniswap/permit2
+[submodule "lib/suzaku-core"]
+	path = lib/suzaku-core
+	url = https://github.com/suzaku-network/suzaku-core
+[submodule "lib/collateral"]
+	path = lib/collateral
+	url = https://github.com/suzaku-network/collateral
